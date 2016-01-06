@@ -1397,6 +1397,107 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 #endif
 }
 
+#pragma mark Hooks
+NSString * const FMDatabaseInsert = @"FMDatabaseInsert";
+NSString * const FMDatabaseDelete = @"FMDatabaseDelete";
+NSString * const FMDatabaseUpdate = @"FMDatabaseUpdate";
+NSString * const FMDatabaseTransactionRollback = @"FMDatabaseTransactionRollback";
+NSString * const FMDatabaseTransactionCommit = @"FMDatabaseTransactionCommit";
+
+static void FMDBBlockSQLiteOnUpdate(void *b, int option, char const *db, const char *table, sqlite3_int64 rowid);
+static void FMDBBlockSQLiteOnUpdate(void *b, int option, char const *db, const char *table, sqlite3_int64 rowid) {
+#if ! __has_feature(objc_arc)
+    void (^block)(NSString * operation, NSString *table, unsigned long long rowid) = (id)b;
+#else
+    void (^block)(NSString * operation, NSString *table, unsigned long long rowid) = (__bridge id)b;
+#endif
+
+    if (block) {
+        NSString *t = [NSString stringWithUTF8String:table];
+        NSString * o = NULL;
+        switch (option) {
+            case SQLITE_INSERT:
+                o = FMDatabaseInsert;
+                break;
+            case SQLITE_DELETE:
+                o = FMDatabaseDelete;
+                break;
+            case SQLITE_UPDATE:
+                o = FMDatabaseUpdate;
+                break;
+            default:
+                NSLog(@"ERROR: <FMDBBlockSQLiteOnUpdate> - Invalid option recieved from SQLite. option: %d", option);
+                return;
+        }
+        block (o, t, (unsigned long long) rowid);
+    }
+}
+
+static int FMDBBlockSQLiteOnCommit(void *b);
+static int FMDBBlockSQLiteOnCommit(void *b) {
+#if ! __has_feature(objc_arc)
+    int (^block)(NSString const * operation) = (id)b;
+#else
+    int (^block)(NSString const * operation) = (__bridge id)b;
+#endif
+
+    int rc = 0;
+    if (block) {
+        rc = block (FMDatabaseTransactionCommit);
+    }
+    return rc;
+}
+
+static void FMDBBlockSQLiteOnRollback(void *b);
+static void FMDBBlockSQLiteOnRollback(void *b) {
+#if ! __has_feature(objc_arc)
+    int (^block)(NSString const * operation) = (id)b;
+#else
+    int (^block)(NSString const * operation) = (__bridge id)b;
+#endif
+
+    if (block) {
+        block (FMDatabaseTransactionRollback);
+    }
+}
+
+- (void) updateHookWithBlock:(void (^)(NSString * operation, NSString *table, unsigned long long rowid))block {
+
+    if (!_openFunctions) {
+        _openFunctions = [NSMutableSet new];
+    }
+
+    id b = FMDBReturnAutoreleased([block copy]);
+
+    [_openFunctions addObject:b];
+
+#if ! __has_feature(objc_arc)
+    sqlite3_update_hook([self sqliteHandle], b?FMDBBlockSQLiteOnUpdate:NULL, (void *)b);
+#else
+    sqlite3_update_hook([self sqliteHandle], b?FMDBBlockSQLiteOnUpdate:NULL, (__bridge void *)b);
+#endif
+}
+
+- (void) transactionHookWithBlock:(int (^)(NSString * operation))block {
+
+    if (!_openFunctions) {
+        _openFunctions = [NSMutableSet new];
+    }
+
+    id b = FMDBReturnAutoreleased([block copy]);
+
+    [_openFunctions addObject:b];
+
+#if ! __has_feature(objc_arc)
+    sqlite3_commit_hook([self sqliteHandle], b?FMDBBlockSQLiteOnCommit:NULL, (void *)b);
+    sqlite3_rollback_hook([self sqliteHandle], b?FMDBBlockSQLiteOnRollback:NULL, (void *)b);
+#else
+    sqlite3_commit_hook([self sqliteHandle], b?FMDBBlockSQLiteOnCommit:NULL, (__bridge void *)b);
+    sqlite3_rollback_hook([self sqliteHandle], b?FMDBBlockSQLiteOnRollback:NULL, (__bridge void *)b);
+#endif
+    
+}
+
 @end
 
 

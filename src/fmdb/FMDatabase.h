@@ -1000,6 +1000,88 @@ typedef int(^FMDBExecuteStatementsCallbackBlock)(NSDictionary *resultsDictionary
 
 - (void)makeFunctionNamed:(NSString*)name maximumArguments:(int)count withBlock:(void (^)(sqlite3_context *context, int argc, sqlite3_value **argv))block;
 
+extern NSString * const FMDatabaseInsert;
+extern NSString * const FMDatabaseDelete;
+extern NSString * const FMDatabaseUpdate;
+extern NSString * const FMDatabaseTransactionRollback;
+extern NSString * const FMDatabaseTransactionCommit;
+
+///------------------------
+/// @name Hooks
+///------------------------
+
+/** Add a transaction hook to the SQLite connection.
+
+ The given block is called whenever a transaction is rolled back or committed on this connection.
+
+ For example, you can build a watcher class to publish changes to the DB as notifications like this:
+
+    __weak id weakSelf = self;
+    [queue inDatabase:^(FMDatabase *adb) {
+
+        [adb transactionHookWithBlock:^int(const NSString *operation) {
+            if (operation == FMDatabaseTransactionRollback) {
+                DebugLog(@"Transaction rolled back");
+                // Clean out the cached changes
+                [weakSelf.changes removeAllObjects];
+            }
+            else if (operation == FMDatabaseTransactionCommit) {
+                DebugLog(@"Transaction rolled back");
+                if ([weakSelf.changes count]) {
+                    [[NSNotificationCenter defaultCenter] postNotificationName:DatabaseChangeNotification object:weakSelf.db userInfo:weakSelf.changes];
+                    [weakSelf.changes removeAllObjects];
+                }
+            }
+            // Block needs to return 0, otherwise the commit will be canceled and transaction rolled back
+            return 0;
+        }];
+    }];
+
+ @param block The block of code for the hook
+
+ @see updateHookWithBlock:
+ @see [sqlite3_commit_hook()](http://sqlite.org/c3ref/commit_hook.html)
+ @see [sqlite3_rollback_hook()](http://sqlite.org/c3ref/commit_hook.html)
+ */
+
+- (void) transactionHookWithBlock:(int (^)(NSString * operation))block;
+
+/** Add an update hook to the SQLite connection.
+
+ The given block is called whenever any updates happen on this database connection.
+
+ For example, you can build a watcher class to publish changes to the DB as notifications like this:
+
+    __weak id weakSelf = self;
+    [queue inDatabase:^(FMDatabase *adb) {
+
+        [adb updateHookWithBlock:^(const NSString *operation, NSString *table, unsigned long long rowid) {
+            if ([table isEqualToString:@"TableBeingObserved"]) {
+                // 'changes' is a dictionary keyed by 'operation' and the value is an index set of modified row ids
+                NSMutableIndexSet *set = [weakSelf.changes valueForKey:(NSString *)operation];
+                if (!set) {
+                    // Add the modified rowid to the set
+                    set = [[NSMutableIndexSet alloc] rowid];
+                    [weakSelf.changes setValue:set forKey:(NSString *)operation];
+                }
+                else {
+                    [set addIndex:ID];
+                }
+            }
+            else {
+                DebugLog(@"Not interested in this table");
+            }
+        }];
+    }];
+
+ @param block The block of code for the hook
+
+ @see transactionHookWithBlock:
+ @see [sqlite3_update_hook()](http://sqlite.org/c3ref/update_hook.html)
+ */
+
+- (void) updateHookWithBlock:(void (^)(NSString * operation, NSString *table, unsigned long long rowid))block;
+
 
 ///---------------------
 /// @name Date formatter
