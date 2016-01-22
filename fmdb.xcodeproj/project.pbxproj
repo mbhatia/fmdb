@@ -22,6 +22,12 @@
 		621721B61892BFE30006691F /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = CC9E4EB813B31188005F9210 /* FMDatabasePool.m */; };
 		6290CBB7188FE836009790F8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6290CBB6188FE836009790F8 /* Foundation.framework */; };
 		67CB1E3019AD27D000A3CA7F /* FMDatabaseFTS3Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 67CB1E2F19AD27D000A3CA7F /* FMDatabaseFTS3Tests.m */; };
+		73BD132B1C521933000700DD /* FMDB.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8314AF3218CD73D600EC0E25 /* FMDB.h */; };
+		73BD132C1C521933000700DD /* FMDatabase.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = CCC24EBA0A13E34D00A6D3E3 /* FMDatabase.h */; };
+		73BD132D1C521933000700DD /* FMResultSet.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = CCC24EBF0A13E34D00A6D3E3 /* FMResultSet.h */; };
+		73BD132E1C521933000700DD /* FMDatabaseQueue.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = CC47A00D148581E9002CCDAB /* FMDatabaseQueue.h */; };
+		73BD132F1C521933000700DD /* FMDatabaseAdditions.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = CC50F2CC0DF9183600E4AAAE /* FMDatabaseAdditions.h */; };
+		73BD13301C521933000700DD /* FMDatabasePool.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = CC9E4EB713B31188005F9210 /* FMDatabasePool.h */; };
 		8314AF3318CD73D600EC0E25 /* FMDB.h in Headers */ = {isa = PBXBuildFile; fileRef = 8314AF3218CD73D600EC0E25 /* FMDB.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		8DD76F9F0486AA7600D96B5E /* fmdb.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859EA3029092ED04C91782 /* fmdb.1 */; };
@@ -73,9 +79,15 @@
 		6290CBB3188FE836009790F8 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
+			dstPath = include/FMDB;
 			dstSubfolderSpec = 16;
 			files = (
+				73BD132B1C521933000700DD /* FMDB.h in CopyFiles */,
+				73BD132C1C521933000700DD /* FMDatabase.h in CopyFiles */,
+				73BD132D1C521933000700DD /* FMResultSet.h in CopyFiles */,
+				73BD132E1C521933000700DD /* FMDatabaseQueue.h in CopyFiles */,
+				73BD132F1C521933000700DD /* FMDatabaseAdditions.h in CopyFiles */,
+				73BD13301C521933000700DD /* FMDatabasePool.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
